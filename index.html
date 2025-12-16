@@ -1,72 +1,144 @@
-
 <!DOCTYPE html>
-<html lang="zh-Hant-TW">
+<html lang="zh-TW">
+
 <head>
-    <title>BroYouSoEz's Website</title>
+    <meta charset="UTF-8">
+    <title>球場費用平分計算</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+        }
 
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style type="text/css">
+        h2 {
+            margin-top: 30px;
+        }
 
-      a{
+        .row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
 
-        text-decoration:none;
+        input,
+        select,
+        button {
+            padding: 4px;
+        }
 
-      }
+        .section {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
 
-      .webtodo{
-
-        background-color:orangered;
-
-      }
-
-      .webdone{
-
-        background-color:lightgreen ;
-
-      }
-
-      li{
-
-        text-align:Center;
-
-      }
-
-      .listtitle{
-
-        background-color:cyan;
-
-      }
-
-
+        .result {
+            background: #f5f5f5;
+            padding: 10px;
+        }
     </style>
 </head>
 
 <body>
 
-  <div>
+    <h1>球場費用平分計算</h1>
 
-    <ul type ="none">
+    <!-- 球場時段 -->
+    <div class="section">
+        <h2>球場時段</h2>
+        <div id="timeSlots"></div>
+        <button onclick="addTimeSlot()">＋ 新增時段</button>
+    </div>
 
+    <!-- 客人 -->
+    <div class="section">
+        <h2>客人</h2>
+        <div id="players"></div>
+        <button onclick="addPlayer()">＋ 新增客人</button>
+    </div>
 
-      <li class="listtitle"><h1>網頁列表</h1></li>
-      <li class="webdone"><h2><a href="my first website/index.html"  title="前往骨折的第一個網頁" target="_blank">我的第一個網頁</a></h2></li>
-      <li class="webdone"><h2><a href="my second website/index.html" title="你知道嗎?其實地球是圓的!" target="_blank">我的第二個網頁</a></h2></li>
-      <li class="webdone"><h2><a href="my third website/index.html" title="你知道ebay嗎?聽說可以吃喔!" target="_blank">我的第三個網頁</a></h2></li>
-      <li class="webdone"><h2><a href="my 4th website/index.html" title="JS到底是什麼呢?" target="_blank">我的第四個網頁</a></h2></li>
-      <li class="webdone"><h2><a href="my 5th website/index.html" title="反應力很重要嗎?" target="_blank">我的第五個網頁</a></h2></li>
-      <li class="webdone"><h2><a href="my 6th website/index.html" title="AIMBOT?" target="_blank">我的第六個網頁</a></h2></li>
-      <li class="webdone"><h2><a href="my 7th website/index.html" title="表單能吃嗎?" target="_blank">我的第七個網頁</a></h2></li>
-      <li class="webdone"><h2><a href="my 8th website/index.html" title="只限1920X1080==" target="_blank">我的第八個網頁</a></h2></li>
-      <li class="webtodo"><h2><a href="#" title="製作中..." target="_self">我的第九個網頁(未完成)</a></h2></li>
-      <li class="webtodo"><h2><a href="#" title="製作中..." target="_self">我的第十個網頁(未完成)</a></h2></li>
-      <li class="webtodo"><h2><a href="#" title="製作中..." target="_self">我的第十一個網頁(未完成)</a></h2></li>
-      <li class="webtodo"><h2><a href="#" title="製作中..." target="_self">我的第十二個網頁(未完成)</a></h2></li>
-      <li class="webtodo"><h2><a href="#" title="製作中..." target="_self">我的第十三個網頁(未完成)</a></h2></li>
+    <button onclick="calculate()">計算</button>
 
-    </ul>
+    <div class="section result" id="result"></div>
 
-  </div>
+    <script>
+        const times = [];
+        for (let h = 18; h <= 22; h++) {
+            times.push(String(h).padStart(2, '0') + ":00");
+        }
+
+        function timeSelect() {
+            return times.map(t => `<option value="${t}">${t}</option>`).join("");
+        }
+
+        function addTimeSlot() {
+            const div = document.createElement("div");
+            div.className = "row";
+            div.innerHTML = `
+    <select class="start">${timeSelect()}</select>
+    ～ 
+    <select class="end">${timeSelect()}</select>
+    費用 <input type="number" class="cost" value="800">
+    <button onclick="this.parentElement.remove()">−</button>
+  `;
+            document.getElementById("timeSlots").appendChild(div);
+        }
+
+        function addPlayer() {
+            const div = document.createElement("div");
+            div.className = "row";
+            div.innerHTML = `
+    名稱 <input class="name" value="客人">
+    <select class="start">${timeSelect()}</select>
+    ～ 
+    <select class="end">${timeSelect()}</select>
+    <button onclick="this.parentElement.remove()">−</button>
+  `;
+            document.getElementById("players").appendChild(div);
+        }
+
+        function toMinutes(t) {
+            const [h, m] = t.split(":").map(Number);
+            return h * 60 + m;
+        }
+
+        function calculate() {
+            const slots = [...document.querySelectorAll("#timeSlots .row")].map(r => ({
+                start: toMinutes(r.querySelector(".start").value),
+                end: toMinutes(r.querySelector(".end").value),
+                cost: Number(r.querySelector(".cost").value)
+            }));
+
+            const players = [...document.querySelectorAll("#players .row")].map(r => ({
+                name: r.querySelector(".name").value,
+                start: toMinutes(r.querySelector(".start").value),
+                end: toMinutes(r.querySelector(".end").value),
+                pay: 0
+            }));
+
+            const unit = 30; // 30 分鐘
+            slots.forEach(slot => {
+                const units = (slot.end - slot.start) / unit;
+                const costPerUnit = slot.cost / units;
+
+                for (let t = slot.start; t < slot.end; t += unit) {
+                    const active = players.filter(p => p.start < t + unit && p.end > t);
+                    if (active.length === 0) continue;
+                    const share = costPerUnit / active.length;
+                    active.forEach(p => p.pay += share);
+                }
+            });
+
+            document.getElementById("result").innerHTML =
+                players.map(p => `${p.name}：${p.pay.toFixed(0)} 元`).join("<br>");
+        }
+
+        // 預設一組
+        addTimeSlot();
+        addPlayer();
+    </script>
 
 </body>
+
 </html>
